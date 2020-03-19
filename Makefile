@@ -2,7 +2,7 @@
 run: install
 	protoc -I. \
 	  -I${GOPATH}/src \
-	  --entity_out=. hello.proto
+		--entity_out=file=./js.template:. hello.proto
 
 .PHONY: instlal
 install: format

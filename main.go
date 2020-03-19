@@ -120,6 +120,23 @@ func emitResp(resp *plugin.CodeGeneratorResponse) error {
 	return err
 }
 
+func isPrimitive(f *descriptor.FieldDescriptorProto) bool {
+	switch f.GetType() {
+	case descriptor.FieldDescriptorProto_TYPE_STRING,
+		descriptor.FieldDescriptorProto_TYPE_INT32,
+		descriptor.FieldDescriptorProto_TYPE_UINT32,
+		descriptor.FieldDescriptorProto_TYPE_SINT32,
+		descriptor.FieldDescriptorProto_TYPE_INT64,
+		descriptor.FieldDescriptorProto_TYPE_UINT64,
+		descriptor.FieldDescriptorProto_TYPE_SINT64,
+		descriptor.FieldDescriptorProto_TYPE_BOOL,
+		descriptor.FieldDescriptorProto_TYPE_DOUBLE,
+		descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		return true
+	}
+	return false
+}
+
 func getType(f *descriptor.FieldDescriptorProto, packageName string) string {
 	switch f.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_STRING:
@@ -157,8 +174,11 @@ func initTemplate(file string) {
 		}
 	}
 	messageTemplate, err = template.New("apex").Funcs(template.FuncMap{
-		"getName": func(name string) string {
-			return strcase.ToCamel(name)
+		"isPrimitive": isPrimitive,
+		"getName":     strcase.ToCamel,
+		"toLower":     strcase.ToLowerCamel,
+		"isRepeated": func(f *descriptor.FieldDescriptorProto) bool {
+			return f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 		},
 		"propertyType": func(f *descriptor.FieldDescriptorProto, packageName string) string {
 			format := "%s"
