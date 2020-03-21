@@ -24,6 +24,7 @@ const messageTemplateString = `type {{ .Prefix }}{{ .Type.Name }} struct {
 type templateBind struct {
 	Type        *descriptor.DescriptorProto
 	Name        string
+	Fields      []*descriptor.FieldDescriptorProto
 	Prefix      string
 	PackageName string
 	Extends     string
@@ -67,6 +68,7 @@ func processMessageTypes(packageName, prefix string, messageTypes []*descriptor.
 		b := bytes.NewBuffer([]byte{})
 		err := messageTemplate.Execute(b, templateBind{
 			Name:        m.GetName(),
+			Fields:      m.GetField(),
 			Type:        m,
 			Prefix:      prefix,
 			PackageName: packageName,
@@ -81,18 +83,22 @@ func processMessageTypes(packageName, prefix string, messageTypes []*descriptor.
 }
 
 func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse {
-	file := ""
+	template := ""
+	suffix := ".out"
 	for _, p := range strings.Split(req.GetParameter(), ",") {
 		spec := strings.SplitN(p, "=", 2)
 		if len(spec) == 1 {
 			continue
 		}
 		name, value := spec[0], spec[1]
-		if name == "file" {
-			file = value
+		switch name {
+		case "template":
+			template = value
+		case "suffix":
+			suffix = value
 		}
 	}
-	initTemplate(file)
+	initTemplate(template)
 
 	files := make(map[string]*descriptor.FileDescriptorProto)
 	for _, f := range req.ProtoFile {
@@ -101,7 +107,7 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 	var resp plugin.CodeGeneratorResponse
 	for _, fname := range req.FileToGenerate {
 		f := files[fname]
-		outFile := fname + ".out"
+		outFile := fname + suffix
 		content := processMessageTypes(f.GetPackage(), "", f.MessageType)
 		resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
 			Name:    &outFile,
@@ -180,6 +186,7 @@ func initTemplate(file string) {
 		"isRepeated": func(f *descriptor.FieldDescriptorProto) bool {
 			return f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 		},
+		"getSingleType": getType,
 		"propertyType": func(f *descriptor.FieldDescriptorProto, packageName string) string {
 			format := "%s"
 			if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
