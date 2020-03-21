@@ -16,11 +16,6 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-const messageTemplateString = `type {{ .Prefix }}{{ .Type.Name }} struct {
-    {{ range .Type.Field }}{{ getName .Name }} {{ propertyType . $.PackageName }}
-    {{ end }}
-}`
-
 type templateBind struct {
 	Type        *descriptor.DescriptorProto
 	Name        string
@@ -41,7 +36,6 @@ type method struct {
 type clientBind struct {
 	Name         string
 	Methods      []*method
-	Extends      string
 	EndpointBase string
 }
 
@@ -171,13 +165,9 @@ func getType(f *descriptor.FieldDescriptorProto, packageName string) string {
 func initTemplate(file string) {
 	var err error
 	var buf []byte
-	if file == "" {
-		buf = []byte(messageTemplateString)
-	} else {
-		buf, err = ioutil.ReadFile(file)
-		if err != nil {
-			panic(err)
-		}
+	buf, err = ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
 	}
 	messageTemplate, err = template.New("apex").Funcs(template.FuncMap{
 		"isPrimitive": isPrimitive,
