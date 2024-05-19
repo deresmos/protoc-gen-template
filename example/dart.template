@@ -1,0 +1,10 @@
+@freezed
+class {{toSingular .MessageName}} with _${{toSingular .MessageName}} {
+  const {{toSingular .MessageName}}._();
+  const factory {{toSingular .MessageName}}({
+    {{ range .Fields }}{{if .IsRequired}}required {{end}}{{ .DataTypeName }} {{ toLowerCamelCase .Name }},
+    {{ end }}
+  }) = _{{toSingular .MessageName}};
+
+  factory {{toSingular .MessageName}}.fromJson(Map<String, dynamic> json) => _${{toSingular .MessageName}}FromJson(json);
+}

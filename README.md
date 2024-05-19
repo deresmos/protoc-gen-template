@@ -5,20 +5,38 @@ A protoc plugin to output file with text/template literal
 ## Install
 
 ```bash
-$ go get github.com/tzmfreedom/protoc-gen-template
+go install github.com/deresmos/protoc-gen-template
 ```
 
 ## Usage
 
 generate class files with following command
 ```bash
-$ protoc -I. --template_out=template=go.template:. target.proto
+protoc --template_out=template=ts.template,lang=typescript,generate_type=message,output=./:. schema.proto
 ```
 
 You should write template file with [text/template](https://golang.org/pkg/text/template/)
+
+### TypeScript
+
 ```
-type {{ .Prefix }}{{ .Type.Name }} struct {
-    {{ range .Type.Field }}{{ getName .Name }} {{ propertyType . $.PackageName }}
+export interface {{toSingular .MessageName}}Doc {
+    {{ range .Fields }}{{ toLowerCamelCase .Name }}: {{ .DataTypeName }},
     {{ end }}
+}
+```
+
+### Dart
+
+```
+@freezed
+class {{toSingular .MessageName}} with _${{toSingular .MessageName}} {
+  const {{toSingular .MessageName}}._();
+  const factory {{toSingular .MessageName}}({
+    {{ range .Fields }}{{if .IsRequired}}required {{end}}{{ .DataTypeName }} {{ toLowerCamelCase .Name }},
+    {{ end }}
+  }) = _{{toSingular .MessageName}};
+
+  factory {{toSingular .MessageName}}.fromJson(Map<String, dynamic> json) => _${{toSingular .MessageName}}FromJson(json);
 }
 ```
