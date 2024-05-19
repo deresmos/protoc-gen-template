@@ -1,4 +1,0 @@
-type {{ .Prefix }}{{ .Type.Name }} struct {
-    {{ range .Type.Field }}{{ getName .Name }} {{ propertyType . $.PackageName }}
-    {{ end }}
-}

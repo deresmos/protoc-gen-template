@@ -4,47 +4,20 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"strings"
+	"path"
 	"text/template"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/deresmos/protoc-gen-template/datatype"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/iancoleman/strcase"
-)
-
-type templateBind struct {
-	Type        *descriptor.DescriptorProto
-	Name        string
-	Fields      []*descriptor.FieldDescriptorProto
-	Prefix      string
-	PackageName string
-	Extends     string
-}
-
-type method struct {
-	Name       string
-	HttpMethod string
-	Path       string
-	InputType  string
-	OutputType string
-}
-
-type clientBind struct {
-	Name         string
-	Methods      []*method
-	EndpointBase string
-}
-
-var (
-	messageTemplate *template.Template
+	"google.golang.org/protobuf/proto"
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
-	buf, err := ioutil.ReadAll(r)
+	buf, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -56,43 +29,74 @@ func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
 	return &req, nil
 }
 
-func processMessageTypes(packageName, prefix string, messageTypes []*descriptor.DescriptorProto) string {
-	var content string
-	for _, m := range messageTypes {
-		b := bytes.NewBuffer([]byte{})
-		err := messageTemplate.Execute(b, templateBind{
-			Name:        m.GetName(),
-			Fields:      m.GetField(),
-			Type:        m,
-			Prefix:      prefix,
-			PackageName: packageName,
-		})
-		if err != nil {
-			panic(err)
-		}
-		content += b.String() + "\n"
-		content += processMessageTypes(packageName, prefix+m.GetName(), m.NestedType)
+type fileGenerator struct {
+	packageName             string // TODO:
+	option                  *ProtoOption
+	fileDescriptorGenerator *FileDescriptorGenerator
+	template                *template.Template
+}
+
+func (g *fileGenerator) outputPath(fileName string) string {
+	return path.Join(g.option.OutputPath, fmt.Sprintf("%s.%s", fileName, g.option.FileNameExt))
+}
+
+func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGeneratorResponse_File, error) {
+	fileDescriptor, err := g.fileDescriptorGenerator.Run(f.MessageType)
+	if err != nil {
+		panic(err)
 	}
-	return content
+
+	var files []*plugin.CodeGeneratorResponse_File
+	switch g.option.GenerateType {
+	case "message":
+		for _, message := range fileDescriptor.Messages {
+			b := bytes.NewBuffer([]byte{})
+			err := g.template.Execute(b, message)
+			if err != nil {
+				return nil, err
+			}
+			outputPath := g.outputPath(strcase.ToSnake(message.MessageName))
+			files = append(files, &plugin.CodeGeneratorResponse_File{
+				Name:    &outputPath,
+				Content: proto.String(b.String()),
+			})
+		}
+	case "file":
+		b := bytes.NewBuffer([]byte{})
+		err := g.template.Execute(b, fileDescriptor)
+		if err != nil {
+			return nil, err
+		}
+		outputPath := g.outputPath(strcase.ToSnake(g.option.TemplatePath))
+		files = append(files, &plugin.CodeGeneratorResponse_File{
+			Name:    &outputPath,
+			Content: proto.String(b.String()),
+		})
+	}
+	return files, nil
 }
 
 func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse {
-	template := ""
-	suffix := ".out"
-	for _, p := range strings.Split(req.GetParameter(), ",") {
-		spec := strings.SplitN(p, "=", 2)
-		if len(spec) == 1 {
-			continue
-		}
-		name, value := spec[0], spec[1]
-		switch name {
-		case "template":
-			template = value
-		case "suffix":
-			suffix = value
-		}
+	protoOption, err := NewProtoOptionFromString(req.GetParameter())
+	if err != nil {
+		panic(err)
 	}
-	initTemplate(template)
+	dataType, err := datatype.NewDataType(protoOption.Language)
+	if err != nil {
+		panic(err)
+	}
+
+	fileDescriptorGenerator := NewFileDescriptorGenerator(req.GetParameter(), dataType)
+	tmpl, err := initTemplate(protoOption.TemplatePath)
+	if err != nil {
+		panic(err)
+	}
+	fileGenerator := &fileGenerator{
+		packageName:             req.GetParameter(),
+		option:                  protoOption,
+		fileDescriptorGenerator: fileDescriptorGenerator,
+		template:                tmpl,
+	}
 
 	files := make(map[string]*descriptor.FileDescriptorProto)
 	for _, f := range req.ProtoFile {
@@ -101,13 +105,13 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 	var resp plugin.CodeGeneratorResponse
 	for _, fname := range req.FileToGenerate {
 		f := files[fname]
-		outFile := fname + suffix
-		content := processMessageTypes(f.GetPackage(), "", f.MessageType)
-		resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
-			Name:    &outFile,
-			Content: proto.String(content),
-		})
+		files, err := fileGenerator.run(f)
+		if err != nil {
+			panic(err)
+		}
+		resp.File = files
 	}
+
 	return &resp
 }
 
@@ -118,76 +122,6 @@ func emitResp(resp *plugin.CodeGeneratorResponse) error {
 	}
 	_, err = os.Stdout.Write(buf)
 	return err
-}
-
-func isPrimitive(f *descriptor.FieldDescriptorProto) bool {
-	switch f.GetType() {
-	case descriptor.FieldDescriptorProto_TYPE_STRING,
-		descriptor.FieldDescriptorProto_TYPE_INT32,
-		descriptor.FieldDescriptorProto_TYPE_UINT32,
-		descriptor.FieldDescriptorProto_TYPE_SINT32,
-		descriptor.FieldDescriptorProto_TYPE_INT64,
-		descriptor.FieldDescriptorProto_TYPE_UINT64,
-		descriptor.FieldDescriptorProto_TYPE_SINT64,
-		descriptor.FieldDescriptorProto_TYPE_BOOL,
-		descriptor.FieldDescriptorProto_TYPE_DOUBLE,
-		descriptor.FieldDescriptorProto_TYPE_FLOAT:
-		return true
-	}
-	return false
-}
-
-func getType(f *descriptor.FieldDescriptorProto, packageName string) string {
-	switch f.GetType() {
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
-		return "string"
-	case descriptor.FieldDescriptorProto_TYPE_INT32,
-		descriptor.FieldDescriptorProto_TYPE_UINT32,
-		descriptor.FieldDescriptorProto_TYPE_SINT32:
-		return "int32"
-	case descriptor.FieldDescriptorProto_TYPE_INT64,
-		descriptor.FieldDescriptorProto_TYPE_UINT64,
-		descriptor.FieldDescriptorProto_TYPE_SINT64:
-		return "int64"
-	case descriptor.FieldDescriptorProto_TYPE_BOOL:
-		return "bool"
-	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
-		descriptor.FieldDescriptorProto_TYPE_FLOAT:
-		return "double"
-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		t := strings.Replace(f.GetTypeName(), "."+packageName+".", "", -1)
-		t = strings.Replace(t, ".", "", -1)
-		return t
-	}
-	return "unknown"
-}
-
-func initTemplate(file string) {
-	var err error
-	var buf []byte
-	buf, err = ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	messageTemplate, err = template.New("apex").Funcs(template.FuncMap{
-		"isPrimitive": isPrimitive,
-		"getName":     strcase.ToCamel,
-		"toLower":     strcase.ToLowerCamel,
-		"isRepeated": func(f *descriptor.FieldDescriptorProto) bool {
-			return f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
-		},
-		"getSingleType": getType,
-		"propertyType": func(f *descriptor.FieldDescriptorProto, packageName string) string {
-			format := "%s"
-			if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				format = "[]%s"
-			}
-			return fmt.Sprintf(format, getType(f, packageName))
-		},
-	}).Parse(string(buf))
-	if err != nil {
-		panic(err)
-	}
 }
 
 func run() error {
