@@ -61,6 +61,25 @@ func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGe
 				Content: proto.String(b.String()),
 			})
 		}
+	case "service":
+		for _, service := range fileDescriptor.Services {
+			b := bytes.NewBuffer([]byte{})
+			err := g.fileTemplate.Execute(b, service)
+			if err != nil {
+				return nil, err
+			}
+			outputPathBuffer := bytes.NewBuffer([]byte{})
+			err = g.outputPathTemplate.Execute(outputPathBuffer, service)
+			if err != nil {
+				return nil, err
+			}
+
+			outputPath := outputPathBuffer.String()
+			files = append(files, &plugin.CodeGeneratorResponse_File{
+				Name:    &outputPath,
+				Content: proto.String(b.String()),
+			})
+		}
 	case "file":
 		b := bytes.NewBuffer([]byte{})
 		err := g.fileTemplate.Execute(b, fileDescriptor)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/gertd/go-pluralize"
@@ -38,6 +39,14 @@ func (t TemplateFunc) ToSingular(s string) string {
 	return t.pluarizerClient.Singular(s)
 }
 
+func (t TemplateFunc) Replace(old, new, src string) string {
+	return strings.Replace(src, old, new, -1)
+}
+
+func (t TemplateFunc) Contains(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
+
 func initFileTemplate(file string) (*template.Template, error) {
 	var err error
 	var buf []byte
@@ -53,6 +62,8 @@ func initFileTemplate(file string) (*template.Template, error) {
 		"toSnakeCase":              templateFunc.ToSnakeCase,
 		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
 		"toSingular":               templateFunc.ToSingular,
+		"replace":                  templateFunc.Replace,
+		"contains":                 templateFunc.Contains,
 	}).Parse(string(buf))
 	if err != nil {
 		return nil, err
@@ -69,6 +80,8 @@ func initOutputPathTemplate(outputPath string) (*template.Template, error) {
 		"toSnakeCase":              templateFunc.ToSnakeCase,
 		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
 		"toSingular":               templateFunc.ToSingular,
+		"replace":                  strings.Replace,
+		"contains":                 templateFunc.Contains,
 	}).Parse(outputPath)
 	if err != nil {
 		return nil, err

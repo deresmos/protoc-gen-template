@@ -2,6 +2,7 @@ package datatype
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
@@ -29,7 +30,7 @@ func (t DartDataType) getTypeName(f *descriptor.FieldDescriptorProto) (string, e
 		case ".google.protobuf.Timestamp":
 			return "DateTime", nil
 		default:
-			return "", fmt.Errorf("unknown type: %s", f.GetTypeName())
+			return strings.TrimPrefix(f.GetTypeName(), "."), nil
 		}
 	}
 
