@@ -8,7 +8,6 @@ import (
 type ProtoOption struct {
 	TemplatePath string
 	Language     string
-	FileNameExt  string
 	OutputPath   string
 	GenerateType string
 }
@@ -22,7 +21,7 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 	if err != nil {
 		return nil, err
 	}
-	outputDirectory, err := parseProtoOption(protoOption, "output")
+	outputDirectory, err := parseProtoOption(protoOption, "output_path")
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +33,6 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 	return &ProtoOption{
 		TemplatePath: templatePath,
 		Language:     language,
-		FileNameExt:  getFileNameExtFromLanguage(language),
 		OutputPath:   outputDirectory,
 		GenerateType: generateType,
 	}, nil
@@ -49,15 +47,4 @@ func parseProtoOption(optionString string, fieldName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("option `%s` not found", fieldName)
-}
-
-func getFileNameExtFromLanguage(language string) string {
-	switch language {
-	case "dart":
-		return "dart"
-	case "typescript":
-		return "ts"
-	default:
-		return "txt"
-	}
 }

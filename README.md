@@ -12,7 +12,7 @@ go install github.com/deresmos/protoc-gen-template
 
 generate class files with following command
 ```bash
-protoc --template_out=template=ts.template,lang=typescript,generate_type=message,output=./:. schema.proto
+protoc --template_out='template=ts.template,lang=typescript,generate_type=message,output_path=./{{toSnakeCase .MessageName}}.ts:.' schema.proto
 ```
 
 You should write template file with [text/template](https://golang.org/pkg/text/template/)

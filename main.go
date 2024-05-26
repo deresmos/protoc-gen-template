@@ -2,17 +2,14 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"path"
 	"text/template"
 
 	"github.com/deresmos/protoc-gen-template/datatype"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
-	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -33,15 +30,12 @@ type fileGenerator struct {
 	packageName             string // TODO:
 	option                  *ProtoOption
 	fileDescriptorGenerator *FileDescriptorGenerator
-	template                *template.Template
-}
-
-func (g *fileGenerator) outputPath(fileName string) string {
-	return path.Join(g.option.OutputPath, fmt.Sprintf("%s.%s", fileName, g.option.FileNameExt))
+	fileTemplate            *template.Template
+	outputPathTemplate      *template.Template
 }
 
 func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGeneratorResponse_File, error) {
-	fileDescriptor, err := g.fileDescriptorGenerator.Run(f.MessageType)
+	fileDescriptor, err := g.fileDescriptorGenerator.Run(f)
 	if err != nil {
 		panic(err)
 	}
@@ -51,11 +45,17 @@ func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGe
 	case "message":
 		for _, message := range fileDescriptor.Messages {
 			b := bytes.NewBuffer([]byte{})
-			err := g.template.Execute(b, message)
+			err := g.fileTemplate.Execute(b, message)
 			if err != nil {
 				return nil, err
 			}
-			outputPath := g.outputPath(strcase.ToSnake(message.MessageName))
+			outputPathBuffer := bytes.NewBuffer([]byte{})
+			err = g.outputPathTemplate.Execute(outputPathBuffer, message)
+			if err != nil {
+				return nil, err
+			}
+
+			outputPath := outputPathBuffer.String()
 			files = append(files, &plugin.CodeGeneratorResponse_File{
 				Name:    &outputPath,
 				Content: proto.String(b.String()),
@@ -63,11 +63,11 @@ func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGe
 		}
 	case "file":
 		b := bytes.NewBuffer([]byte{})
-		err := g.template.Execute(b, fileDescriptor)
+		err := g.fileTemplate.Execute(b, fileDescriptor)
 		if err != nil {
 			return nil, err
 		}
-		outputPath := g.outputPath(strcase.ToSnake(g.option.TemplatePath))
+		outputPath := g.option.OutputPath
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    &outputPath,
 			Content: proto.String(b.String()),
@@ -87,15 +87,21 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 	}
 
 	fileDescriptorGenerator := NewFileDescriptorGenerator(req.GetParameter(), dataType)
-	tmpl, err := initTemplate(protoOption.TemplatePath)
+	fileTmpl, err := initFileTemplate(protoOption.TemplatePath)
 	if err != nil {
 		panic(err)
 	}
+	outputTmpl, err := initOutputPathTemplate(protoOption.OutputPath)
+	if err != nil {
+		panic(err)
+	}
+
 	fileGenerator := &fileGenerator{
 		packageName:             req.GetParameter(),
 		option:                  protoOption,
 		fileDescriptorGenerator: fileDescriptorGenerator,
-		template:                tmpl,
+		fileTemplate:            fileTmpl,
+		outputPathTemplate:      outputTmpl,
 	}
 
 	files := make(map[string]*descriptor.FileDescriptorProto)

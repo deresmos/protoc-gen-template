@@ -38,7 +38,7 @@ func (t TemplateFunc) ToSingular(s string) string {
 	return t.pluarizerClient.Singular(s)
 }
 
-func initTemplate(file string) (*template.Template, error) {
+func initFileTemplate(file string) (*template.Template, error) {
 	var err error
 	var buf []byte
 	buf, err = os.ReadFile(file)
@@ -54,6 +54,22 @@ func initTemplate(file string) (*template.Template, error) {
 		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
 		"toSingular":               templateFunc.ToSingular,
 	}).Parse(string(buf))
+	if err != nil {
+		return nil, err
+	}
+
+	return tmpl, nil
+}
+
+func initOutputPathTemplate(outputPath string) (*template.Template, error) {
+	templateFunc := NewTemplateFunc(pluralize.NewClient())
+	tmpl, err := template.New("gen-protoc-output-path").Funcs(template.FuncMap{
+		"toCamelCase":              templateFunc.ToCamelCase,
+		"toLowerCamelCase":         templateFunc.ToLowerCamelCase,
+		"toSnakeCase":              templateFunc.ToSnakeCase,
+		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
+		"toSingular":               templateFunc.ToSingular,
+	}).Parse(outputPath)
 	if err != nil {
 		return nil, err
 	}
