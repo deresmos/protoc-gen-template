@@ -42,7 +42,6 @@ type MessageFieldDescriptor struct {
 
 type ServiceDescriptor struct {
 	ServiceName string
-	Name        string
 	Methods     []ServiceMethodDescriptor
 	Messages    MessageDescriptorList
 }
@@ -133,8 +132,7 @@ func (g *FileDescriptorGenerator) generateServiceDescriptor(services []*descript
 	for _, service := range services {
 		methods := g.generateServiceMethodDescriptors(service.Method, messages)
 		newService := ServiceDescriptor{
-			ServiceName: service.GetName(),
-			Name:        strings.TrimSuffix(service.GetName(), "Service"),
+			ServiceName: strings.TrimSuffix(service.GetName(), "Service"),
 			Methods:     methods,
 			Messages:    messages,
 		}
