@@ -9,5 +9,5 @@
 
 // Check parents messages
 {{ range .Parents }}
-    {{ toSingularLowerCamelCase .MessageName }}Id:string,
+    {{ toSingular (toLowerCamelCase .MessageName) }}Id:string,
 {{ end }}
