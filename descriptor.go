@@ -13,6 +13,12 @@ type FileDescriptor struct {
 	Services    []ServiceDescriptor
 }
 
+type MessageDescriptor struct {
+	MessageName string
+	Fields      MessageFieldDescriptorList
+	Parents     MessageDescriptorList
+}
+
 type MessageDescriptorList []MessageDescriptor
 
 func (m MessageDescriptorList) GetByMessageName(name string) *MessageDescriptor {
@@ -25,20 +31,16 @@ func (m MessageDescriptorList) GetByMessageName(name string) *MessageDescriptor 
 	return nil
 }
 
-type MessageDescriptor struct {
-	MessageName string
-	Fields      []MessageFieldDescriptor
-	Parents     []MessageDescriptor
+type MessageFieldDescriptor struct {
+	FieldName    string
+	DataTypeName string
+	// IsRequired   bool // FIXME: Not implement
+	// IsOptional   bool // FIXME: Not implement
+	IsTimestamp bool
+	IsRepeated  bool
 }
 
-type MessageFieldDescriptor struct {
-	Name         string
-	DataTypeName string
-	IsRequired   bool
-	IsOptional   bool
-	IsTimestamp  bool
-	IsRepeated   bool
-}
+type MessageFieldDescriptorList []MessageFieldDescriptor
 
 type ServiceDescriptor struct {
 	ServiceName string
@@ -47,10 +49,10 @@ type ServiceDescriptor struct {
 }
 
 type ServiceMethodDescriptor struct {
-	Name         string
-	Input        *MessageDescriptor
-	Output       *MessageDescriptor
-	Dependencies []MessageDescriptor
+	MethodName    string
+	InputMessage  *MessageDescriptor
+	OutputMessage *MessageDescriptor
+	Dependencies  []MessageDescriptor
 }
 
 type FileDescriptorGenerator struct {
@@ -113,12 +115,12 @@ func (g *FileDescriptorGenerator) generateMessageFieldDescriptors(fields []*desc
 		}
 
 		param := MessageFieldDescriptor{
-			Name:         field.GetName(),
+			FieldName:    field.GetName(),
 			DataTypeName: typeName,
-			IsRequired:   !field.GetProto3Optional(),
-			IsOptional:   field.GetProto3Optional(),
-			IsTimestamp:  field.GetTypeName() == ".google.protobuf.Timestamp",
-			IsRepeated:   field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
+			// IsRequired:   !field.GetProto3Optional(),
+			// IsOptional:   field.GetProto3Optional(),
+			IsTimestamp: field.GetTypeName() == ".google.protobuf.Timestamp",
+			IsRepeated:  field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
 		}
 		params = append(params, param)
 	}
@@ -146,9 +148,9 @@ func (g *FileDescriptorGenerator) generateServiceMethodDescriptors(methods []*de
 	var params []ServiceMethodDescriptor
 	for _, method := range methods {
 		param := ServiceMethodDescriptor{
-			Name:   method.GetName(),
-			Input:  messages.GetByMessageName(strings.TrimPrefix(method.GetInputType(), ".")),
-			Output: messages.GetByMessageName(strings.TrimPrefix(method.GetOutputType(), ".")),
+			MethodName:    method.GetName(),
+			InputMessage:  messages.GetByMessageName(strings.TrimPrefix(method.GetInputType(), ".")),
+			OutputMessage: messages.GetByMessageName(strings.TrimPrefix(method.GetOutputType(), ".")),
 		}
 		params = append(params, param)
 	}

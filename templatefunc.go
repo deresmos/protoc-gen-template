@@ -19,10 +19,6 @@ func NewTemplateFunc(pluarizerClient *pluralize.Client) TemplateFunc {
 	}
 }
 
-func (t TemplateFunc) ToSingularLowerCamelCase(s string) string {
-	return t.pluarizerClient.Singular(strcase.ToLowerCamel(s))
-}
-
 func (t TemplateFunc) ToSnakeCase(s string) string {
 	return strcase.ToSnake(s)
 }
@@ -57,13 +53,12 @@ func initFileTemplate(file string) (*template.Template, error) {
 
 	templateFunc := NewTemplateFunc(pluralize.NewClient())
 	tmpl, err := template.New("gen-protoc").Funcs(template.FuncMap{
-		"toCamelCase":              templateFunc.ToCamelCase,
-		"toLowerCamelCase":         templateFunc.ToLowerCamelCase,
-		"toSnakeCase":              templateFunc.ToSnakeCase,
-		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
-		"toSingular":               templateFunc.ToSingular,
-		"replace":                  templateFunc.Replace,
-		"contains":                 templateFunc.Contains,
+		"toCamelCase":      templateFunc.ToCamelCase,
+		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
+		"toSnakeCase":      templateFunc.ToSnakeCase,
+		"toSingular":       templateFunc.ToSingular,
+		"replace":          templateFunc.Replace,
+		"contains":         templateFunc.Contains,
 	}).Parse(string(buf))
 	if err != nil {
 		return nil, err
@@ -75,13 +70,12 @@ func initFileTemplate(file string) (*template.Template, error) {
 func initOutputPathTemplate(outputPath string) (*template.Template, error) {
 	templateFunc := NewTemplateFunc(pluralize.NewClient())
 	tmpl, err := template.New("gen-protoc-output-path").Funcs(template.FuncMap{
-		"toCamelCase":              templateFunc.ToCamelCase,
-		"toLowerCamelCase":         templateFunc.ToLowerCamelCase,
-		"toSnakeCase":              templateFunc.ToSnakeCase,
-		"toSingularLowerCamelCase": templateFunc.ToSingularLowerCamelCase,
-		"toSingular":               templateFunc.ToSingular,
-		"replace":                  strings.Replace,
-		"contains":                 templateFunc.Contains,
+		"toCamelCase":      templateFunc.ToCamelCase,
+		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
+		"toSnakeCase":      templateFunc.ToSnakeCase,
+		"toSingular":       templateFunc.ToSingular,
+		"replace":          strings.Replace,
+		"contains":         templateFunc.Contains,
 	}).Parse(outputPath)
 	if err != nil {
 		return nil, err

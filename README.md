@@ -21,7 +21,7 @@ You should write template file with [text/template](https://golang.org/pkg/text/
 
 ```
 export interface {{toSingular .MessageName}}Doc {
-    {{ range .Fields }}{{ toLowerCamelCase .Name }}: {{ .DataTypeName }},
+    {{ range .Fields }}{{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
     {{ end }}
 }
 ```
@@ -33,7 +33,7 @@ export interface {{toSingular .MessageName}}Doc {
 class {{toSingular .MessageName}} with _${{toSingular .MessageName}} {
   const {{toSingular .MessageName}}._();
   const factory {{toSingular .MessageName}}({
-    {{ range .Fields }}{{if .IsRequired}}required {{end}}{{ .DataTypeName }} {{ toLowerCamelCase .Name }},
+    {{ range .Fields }}required {{ .DataTypeName }} {{ toLowerCamelCase .FieldName }},
     {{ end }}
   }) = _{{toSingular .MessageName}};
 

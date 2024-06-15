@@ -1,0 +1,13 @@
+// Check fields
+{{toSingular (toLowerCamelCase .MessageName)}}
+
+{{ range .Fields }}
+    {{if .IsTimestamp}}// timestamp{{end}}
+    {{if .IsRepeated}}// repeated{{end}}
+    {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
+{{ end }}
+
+// Check parents messages
+{{ range .Parents }}
+    {{ toSingularLowerCamelCase .MessageName }}Id:string,
+{{ end }}

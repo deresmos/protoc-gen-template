@@ -1,0 +1,35 @@
+// Check fields
+test
+
+
+    
+    
+    strTest: string,
+
+    
+    
+    int32Test: number,
+
+    
+    
+    floatTest: bigint,
+
+    
+    
+    boolTest: boolean,
+
+    
+    // repeated
+    repeatedTest: string[],
+
+    // timestamp
+    
+    timestampTest: Date,
+
+    
+    
+    typeTest: TypeTest,
+
+
+// Check parents messages
+

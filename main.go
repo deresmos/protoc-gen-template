@@ -149,8 +149,8 @@ func emitResp(resp *plugin.CodeGeneratorResponse) error {
 	return err
 }
 
-func run() error {
-	req, err := parseReq(os.Stdin)
+func Run(r io.Reader) error {
+	req, err := parseReq(r)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func run() error {
 }
 
 func main() {
-	if err := run(); err != nil {
+	if err := Run(os.Stdin); err != nil {
 		log.Fatalln(err)
 	}
 }

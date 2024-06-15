@@ -1,0 +1,22 @@
+{{toSnakeCase .ServiceName}}
+
+
+{{range .Methods}}
+    {{toSnakeCase .MethodName}}
+    {{.InputMessage.MessageName}}
+    {{ range .InputMessage.Fields }}
+        {{ toLowerCamelCase .FieldName }}
+    {{ end }}
+
+    {{.OutputMessage.MessageName}}
+    {{ range .OutputMessage.Fields }}
+        {{ toLowerCamelCase .FieldName }}
+    {{ end }}
+{{end}}
+
+{{range .Messages}}
+    {{toSingular .MessageName}}
+    {{ range .Fields }}
+        {{ toLowerCamelCase .FieldName }}
+    {{ end }}
+{{end}}

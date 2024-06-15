@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message Tests {
+  string strTest = 1;
+  int32 int32Test = 2;
+  float floatTest = 3;
+  bool boolTest = 4;
+  repeated string repeatedTest = 5;
+  google.protobuf.Timestamp timestampTest = 6;
+  TypeTest typeTest = 7;
+
+  message NestTests {
+    string id = 1;
+  }
+}
+
+message TwoTests {
+  string id = 1;
+}
+
+message TypeTest {
+  string id = 1;
+}

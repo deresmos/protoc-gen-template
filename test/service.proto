@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+service TestService {
+  rpc GetTest (GetTestRequest) returns (GetTestResponse);
+  rpc CreateTest (CreateTestRequest) returns (CreateTestResponse);
+}
+
+message GetTestRequest {
+  string id = 1;
+}
+
+message GetTestResponse {
+  repeated User items = 1;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+}
+
+message CreateTestRequest {
+  string id = 1;
+}
+
+message CreateTestResponse {
+  string name = 1;
+}

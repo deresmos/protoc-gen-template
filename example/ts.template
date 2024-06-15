@@ -1,4 +1,4 @@
 export interface {{toSingular .MessageName}}Doc {
-    {{ range .Fields }}{{ toLowerCamelCase .Name }}: {{ .DataTypeName }},
+    {{ range .Fields }}{{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
     {{ end }}
 }
