@@ -4,6 +4,7 @@
 {{ range .Fields }}
     {{if .IsTimestamp}}// timestamp{{end}}
     {{if .IsRepeated}}// repeated{{end}}
+    {{if .IsOptional}}// optional{{end}}
     {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
 {{ end }}
 

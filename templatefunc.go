@@ -35,6 +35,10 @@ func (t TemplateFunc) ToSingular(s string) string {
 	return t.pluarizerClient.Singular(s)
 }
 
+func (t TemplateFunc) ToPlural(s string) string {
+	return t.pluarizerClient.Plural(s)
+}
+
 func (t TemplateFunc) Replace(old, new, src string) string {
 	return strings.Replace(src, old, new, -1)
 }
@@ -57,6 +61,7 @@ func initFileTemplate(file string) (*template.Template, error) {
 		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
 		"toSnakeCase":      templateFunc.ToSnakeCase,
 		"toSingular":       templateFunc.ToSingular,
+		"toPlural":         templateFunc.ToPlural,
 		"replace":          templateFunc.Replace,
 		"contains":         templateFunc.Contains,
 	}).Parse(string(buf))
@@ -74,6 +79,7 @@ func initOutputPathTemplate(outputPath string) (*template.Template, error) {
 		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
 		"toSnakeCase":      templateFunc.ToSnakeCase,
 		"toSingular":       templateFunc.ToSingular,
+		"toPlural":         templateFunc.ToPlural,
 		"replace":          strings.Replace,
 		"contains":         templateFunc.Contains,
 	}).Parse(outputPath)

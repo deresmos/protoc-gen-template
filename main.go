@@ -8,9 +8,9 @@ import (
 	"text/template"
 
 	"github.com/deresmos/protoc-gen-template/datatype"
-	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"google.golang.org/protobuf/proto"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
+	plugin "google.golang.org/protobuf/types/pluginpb"
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
@@ -128,6 +128,8 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 		files[f.GetName()] = f
 	}
 	var resp plugin.CodeGeneratorResponse
+	features := uint64(plugin.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+	resp.SupportedFeatures = &features
 	for _, fname := range req.FileToGenerate {
 		f := files[fname]
 		files, err := fileGenerator.run(f)

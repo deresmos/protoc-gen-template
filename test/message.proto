@@ -10,6 +10,7 @@ message Tests {
   repeated string repeatedTest = 5;
   google.protobuf.Timestamp timestampTest = 6;
   TypeTest typeTest = 7;
+  optional string optionalTest = 8;
 
   message NestTests {
     string id = 1;

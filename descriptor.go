@@ -1,10 +1,11 @@
 package main
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/deresmos/protoc-gen-template/datatype"
-	"github.com/golang/protobuf/protoc-gen-go/descriptor"
+	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
 
 type FileDescriptor struct {
@@ -34,13 +35,18 @@ func (m MessageDescriptorList) GetByMessageName(name string) *MessageDescriptor 
 type MessageFieldDescriptor struct {
 	FieldName    string
 	DataTypeName string
-	// IsRequired   bool // FIXME: Not implement
-	// IsOptional   bool // FIXME: Not implement
-	IsTimestamp bool
-	IsRepeated  bool
+	IsOptional   bool
+	IsTimestamp  bool
+	IsRepeated   bool
 }
 
 type MessageFieldDescriptorList []MessageFieldDescriptor
+
+func (m MessageFieldDescriptorList) HasTimestamp() bool {
+	return slices.ContainsFunc(m, func(field MessageFieldDescriptor) bool {
+		return field.IsTimestamp
+	})
+}
 
 type ServiceDescriptor struct {
 	ServiceName string
@@ -117,10 +123,9 @@ func (g *FileDescriptorGenerator) generateMessageFieldDescriptors(fields []*desc
 		param := MessageFieldDescriptor{
 			FieldName:    field.GetName(),
 			DataTypeName: typeName,
-			// IsRequired:   !field.GetProto3Optional(),
-			// IsOptional:   field.GetProto3Optional(),
-			IsTimestamp: field.GetTypeName() == ".google.protobuf.Timestamp",
-			IsRepeated:  field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
+			IsOptional:   field.GetProto3Optional(),
+			IsTimestamp:  field.GetTypeName() == ".google.protobuf.Timestamp",
+			IsRepeated:   field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
 		}
 		params = append(params, param)
 	}
