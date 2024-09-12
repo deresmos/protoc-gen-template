@@ -114,9 +114,17 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 				continue
 			}
 		}
+
+		var filteredNestedMessages []MessageDescriptor
+		for _, nestedType := range nestedTypes {
+			if strings.HasPrefix(nestedType.MessageName, "__") {
+				continue
+			}
+			filteredNestedMessages = append(filteredNestedMessages, nestedType)
+		}
 		newMessageType.ItemMessages = itemMessages
 		types = append(types, newMessageType)
-		types = append(types, nestedTypes...)
+		types = append(types, filteredNestedMessages...)
 	}
 
 	return types, nil
