@@ -11,8 +11,13 @@ message Tests {
   google.protobuf.Timestamp timestampTest = 6;
   TypeTest typeTest = 7;
   optional string optionalTest = 8;
+  repeated __TestItem items = 9;
 
   message NestTests {
+    string id = 1;
+  }
+
+  message __TestItem {
     string id = 1;
   }
 }

@@ -5,8 +5,10 @@ test
     
     
     
+    
     strTest: string,
 
+    
     
     
     
@@ -15,8 +17,10 @@ test
     
     
     
+    
     floatTest: bigint,
 
+    
     
     
     
@@ -25,9 +29,11 @@ test
     
     // repeated
     
+    
     repeatedTest: string[],
 
     // timestamp
+    
     
     
     timestampTest: Date,
@@ -35,13 +41,30 @@ test
     
     
     
+    // message type 
     typeTest: TypeTest,
 
     
     
     // optional
+    
     optionalTest: string,
+
+    
+    // repeated
+    
+    // message type 
+    items: TestItem[],
 
 
 // Check parents messages
+
+
+
+// Check itemMessages
+
+__TestItem
+
+    id: string,
+
 

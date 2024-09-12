@@ -5,10 +5,20 @@
     {{if .IsTimestamp}}// timestamp{{end}}
     {{if .IsRepeated}}// repeated{{end}}
     {{if .IsOptional}}// optional{{end}}
+    {{if .IsMessageType}}// message type {{end}}
     {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
 {{ end }}
 
 // Check parents messages
 {{ range .Parents }}
     {{ toSingular (toLowerCamelCase .MessageName) }}Id:string,
+{{ end }}
+
+
+// Check itemMessages
+{{ range .ItemMessages }}
+{{.MessageName}}
+{{ range .Fields }}
+    {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
+{{ end }}
 {{ end }}

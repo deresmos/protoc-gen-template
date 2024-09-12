@@ -15,9 +15,10 @@ type FileDescriptor struct {
 }
 
 type MessageDescriptor struct {
-	MessageName string
-	Fields      MessageFieldDescriptorList
-	Parents     MessageDescriptorList
+	MessageName  string
+	Fields       MessageFieldDescriptorList
+	Parents      MessageDescriptorList
+	ItemMessages MessageDescriptorList
 }
 
 type MessageDescriptorList []MessageDescriptor
@@ -101,11 +102,20 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 			Fields:      fields,
 			Parents:     parents,
 		}
-		types = append(types, newMessageType)
 		nestedTypes, err := g.generateMessageDescriptor(messageType.NestedType, append(parents, newMessageType))
 		if err != nil {
 			return nil, err
 		}
+
+		var itemMessages MessageDescriptorList
+		for _, nestedType := range nestedTypes {
+			if strings.HasPrefix(nestedType.MessageName, "__") {
+				itemMessages = append(itemMessages, nestedType)
+				continue
+			}
+		}
+		newMessageType.ItemMessages = itemMessages
+		types = append(types, newMessageType)
 		types = append(types, nestedTypes...)
 	}
 
