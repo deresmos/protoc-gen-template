@@ -35,7 +35,7 @@ test
     // timestamp
     
     
-    
+    // message type 
     timestampTest: Date,
 
     

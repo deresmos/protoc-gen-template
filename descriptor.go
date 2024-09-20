@@ -34,11 +34,13 @@ func (m MessageDescriptorList) GetByMessageName(name string) *MessageDescriptor 
 }
 
 type MessageFieldDescriptor struct {
-	FieldName    string
-	DataTypeName string
-	IsOptional   bool
-	IsTimestamp  bool
-	IsRepeated   bool
+	FieldName     string
+	DataTypeName  string
+	IsOptional    bool
+	IsRequired    bool
+	IsTimestamp   bool
+	IsRepeated    bool
+	IsMessageType bool
 }
 
 type MessageFieldDescriptorList []MessageFieldDescriptor
@@ -139,11 +141,13 @@ func (g *FileDescriptorGenerator) generateMessageFieldDescriptors(fields []*desc
 		}
 
 		param := MessageFieldDescriptor{
-			FieldName:    field.GetName(),
-			DataTypeName: typeName,
-			IsOptional:   field.GetProto3Optional(),
-			IsTimestamp:  field.GetTypeName() == ".google.protobuf.Timestamp",
-			IsRepeated:   field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
+			FieldName:     field.GetName(),
+			DataTypeName:  typeName,
+			IsOptional:    field.GetProto3Optional(),
+			IsRequired:    !field.GetProto3Optional(),
+			IsTimestamp:   field.GetTypeName() == ".google.protobuf.Timestamp",
+			IsRepeated:    field.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED,
+			IsMessageType: field.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE,
 		}
 		params = append(params, param)
 	}
