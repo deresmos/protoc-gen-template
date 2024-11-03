@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service SecondService {
+  rpc ListSecond (ListSecondRequest) returns (ListSecondResponse);
+}
+
+message ListSecondRequest {
+  string id = 1;
+}
+
+message ListSecondResponse {
+  string id = 1;
+}

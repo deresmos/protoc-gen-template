@@ -14,6 +14,18 @@ type FileDescriptor struct {
 	Services    []ServiceDescriptor
 }
 
+func (f *FileDescriptor) Append(fileDescriptor *FileDescriptor) *FileDescriptor {
+	if f == nil {
+		return fileDescriptor
+	}
+
+	return &FileDescriptor{
+		PackageName: f.PackageName,
+		Messages:    append(f.Messages, fileDescriptor.Messages...),
+		Services:    append(f.Services, fileDescriptor.Services...),
+	}
+}
+
 type MessageDescriptor struct {
 	MessageName  string
 	Fields       MessageFieldDescriptorList

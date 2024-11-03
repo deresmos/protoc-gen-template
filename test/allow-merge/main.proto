@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service MainService {
+  rpc ListMain (ListMainRequest) returns (ListMainResponse);
+}
+
+message ListMainRequest {
+  string id = 1;
+}
+
+message ListMainResponse {
+  string id = 1;
+}

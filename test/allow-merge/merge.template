@@ -1,0 +1,7 @@
+{{range .Services}}
+    {{.ServiceName}}
+{{end}}
+
+{{range .Messages}}
+    {{.MessageName}}
+{{end}}

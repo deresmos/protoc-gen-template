@@ -10,6 +10,7 @@ type ProtoOption struct {
 	Language     string
 	OutputPath   string
 	GenerateType string
+	AllowMerge   bool
 }
 
 func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
@@ -29,12 +30,14 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 	if err != nil {
 		return nil, err
 	}
+	allowMerge := parseOptionalOption(protoOption, "allow_merge")
 
 	return &ProtoOption{
 		TemplatePath: templatePath,
 		Language:     language,
 		OutputPath:   outputDirectory,
 		GenerateType: generateType,
+		AllowMerge:   allowMerge == "true",
 	}, nil
 }
 
@@ -47,4 +50,15 @@ func parseProtoOption(optionString string, fieldName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("option `%s` not found", fieldName)
+}
+
+func parseOptionalOption(optionString string, fieldName string) string {
+	spec := strings.Split(optionString, ",")
+	for _, p := range spec {
+		if strings.Contains(p, fieldName) {
+			return strings.Split(p, "=")[1]
+		}
+	}
+
+	return ""
 }

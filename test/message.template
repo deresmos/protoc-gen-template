@@ -5,7 +5,6 @@
     {{if .IsTimestamp}}// timestamp{{end}}
     {{if .IsRepeated}}// repeated{{end}}
     {{if .IsOptional}}// optional{{end}}
-    {{if .IsMessageType}}// message type {{end}}
     {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
 {{ end }}
 

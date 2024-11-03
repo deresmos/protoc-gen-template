@@ -34,12 +34,7 @@ type fileGenerator struct {
 	outputPathTemplate      *template.Template
 }
 
-func (g *fileGenerator) run(f *descriptor.FileDescriptorProto) ([]*plugin.CodeGeneratorResponse_File, error) {
-	fileDescriptor, err := g.fileDescriptorGenerator.Run(f)
-	if err != nil {
-		panic(err)
-	}
-
+func (g *fileGenerator) run(fileDescriptor *FileDescriptor) ([]*plugin.CodeGeneratorResponse_File, error) {
 	var files []*plugin.CodeGeneratorResponse_File
 	switch g.option.GenerateType {
 	case "message":
@@ -130,13 +125,38 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 	var resp plugin.CodeGeneratorResponse
 	features := uint64(plugin.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 	resp.SupportedFeatures = &features
-	for _, fname := range req.FileToGenerate {
-		f := files[fname]
-		files, err := fileGenerator.run(f)
+
+	if protoOption.AllowMerge {
+		var megeredFileDescriptor *FileDescriptor
+		for _, fname := range req.FileToGenerate {
+			f := files[fname]
+			fileDescriptor, err := fileGenerator.fileDescriptorGenerator.Run(f)
+			if err != nil {
+				panic(err)
+			}
+
+			megeredFileDescriptor = megeredFileDescriptor.Append(fileDescriptor)
+		}
+
+		files, err := fileGenerator.run(megeredFileDescriptor)
 		if err != nil {
 			panic(err)
 		}
 		resp.File = append(resp.File, files...)
+	} else {
+		for _, fname := range req.FileToGenerate {
+			f := files[fname]
+			fileDescriptor, err := fileGenerator.fileDescriptorGenerator.Run(f)
+			if err != nil {
+				panic(err)
+			}
+
+			files, err := fileGenerator.run(fileDescriptor)
+			if err != nil {
+				panic(err)
+			}
+			resp.File = append(resp.File, files...)
+		}
 	}
 
 	return &resp
