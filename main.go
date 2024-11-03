@@ -136,7 +136,7 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 		if err != nil {
 			panic(err)
 		}
-		resp.File = files
+		resp.File = append(resp.File, files...)
 	}
 
 	return &resp
