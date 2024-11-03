@@ -35,6 +35,8 @@ func factoryDataType(lang string) (dataType, error) {
 		return &TypeScriptDataType{}, nil
 	case "dart":
 		return &DartDataType{}, nil
+	case "go":
+		return &GoDataType{}, nil
 	}
 
 	return nil, fmt.Errorf("unknown language: %s", lang)
