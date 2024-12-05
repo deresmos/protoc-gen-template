@@ -23,6 +23,10 @@ func (t TemplateFunc) ToSnakeCase(s string) string {
 	return strcase.ToSnake(s)
 }
 
+func (t TemplateFunc) ToKebab(s string) string {
+	return strcase.ToKebab(s)
+}
+
 func (t TemplateFunc) ToCamelCase(s string) string {
 	return strcase.ToCamel(s)
 }
@@ -58,6 +62,7 @@ func initFileTemplate(file string) (*template.Template, error) {
 	templateFunc := NewTemplateFunc(pluralize.NewClient())
 	tmpl, err := template.New("gen-protoc").Funcs(template.FuncMap{
 		"toCamelCase":      templateFunc.ToCamelCase,
+		"toKebeb":          templateFunc.ToKebab,
 		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
 		"toSnakeCase":      templateFunc.ToSnakeCase,
 		"toSingular":       templateFunc.ToSingular,
