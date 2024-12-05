@@ -142,6 +142,9 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 		if err != nil {
 			panic(err)
 		}
+		if !protoOption.Overwrite {
+			files = filterFirstTimeOutputFiles(files)
+		}
 		resp.File = append(resp.File, files...)
 	} else {
 		for _, fname := range req.FileToGenerate {
@@ -155,11 +158,30 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 			if err != nil {
 				panic(err)
 			}
+			if !protoOption.Overwrite {
+				files = filterFirstTimeOutputFiles(files)
+			}
 			resp.File = append(resp.File, files...)
 		}
 	}
 
 	return &resp
+}
+
+func filterFirstTimeOutputFiles(files []*plugin.CodeGeneratorResponse_File) []*plugin.CodeGeneratorResponse_File {
+	var newFiles []*plugin.CodeGeneratorResponse_File
+	for _, file := range files {
+		// パスが存在するかチェック
+		_, err := os.Stat(file.GetName())
+		if !os.IsNotExist(err) {
+			log.Printf("Skip generate %s. Bacause overwite option is false.", file.GetName())
+			continue
+		}
+
+		newFiles = append(newFiles, file)
+	}
+
+	return newFiles
 }
 
 func emitResp(resp *plugin.CodeGeneratorResponse) error {

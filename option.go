@@ -11,6 +11,7 @@ type ProtoOption struct {
 	OutputPath   string
 	GenerateType string
 	AllowMerge   bool
+	Overwrite    bool
 }
 
 func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
@@ -31,6 +32,7 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 		return nil, err
 	}
 	allowMerge := parseOptionalOption(protoOption, "allow_merge")
+	overwite := parseOptionalOption(protoOption, "overwite")
 
 	return &ProtoOption{
 		TemplatePath: templatePath,
@@ -38,6 +40,7 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 		OutputPath:   outputDirectory,
 		GenerateType: generateType,
 		AllowMerge:   allowMerge == "true",
+		Overwrite:    overwite != "false",
 	}, nil
 }
 
@@ -55,7 +58,7 @@ func parseProtoOption(optionString string, fieldName string) (string, error) {
 func parseOptionalOption(optionString string, fieldName string) string {
 	spec := strings.Split(optionString, ",")
 	for _, p := range spec {
-		if strings.Contains(p, fieldName) {
+		if strings.HasPrefix(p, fieldName) {
 			return strings.Split(p, "=")[1]
 		}
 	}
