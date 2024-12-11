@@ -62,7 +62,7 @@ func initFileTemplate(file string) (*template.Template, error) {
 	templateFunc := NewTemplateFunc(pluralize.NewClient())
 	tmpl, err := template.New("gen-protoc").Funcs(template.FuncMap{
 		"toCamelCase":      templateFunc.ToCamelCase,
-		"toKebeb":          templateFunc.ToKebab,
+		"toKebab":          templateFunc.ToKebab,
 		"toLowerCamelCase": templateFunc.ToLowerCamelCase,
 		"toSnakeCase":      templateFunc.ToSnakeCase,
 		"toSingular":       templateFunc.ToSingular,

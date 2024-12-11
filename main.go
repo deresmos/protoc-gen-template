@@ -75,6 +75,27 @@ func (g *fileGenerator) run(fileDescriptor *FileDescriptor) ([]*plugin.CodeGener
 				Content: proto.String(b.String()),
 			})
 		}
+	case "method":
+		for _, service := range fileDescriptor.Services {
+			for _, method := range service.Methods {
+				b := bytes.NewBuffer([]byte{})
+				err := g.fileTemplate.Execute(b, method)
+				if err != nil {
+					return nil, err
+				}
+				outputPathBuffer := bytes.NewBuffer([]byte{})
+				err = g.outputPathTemplate.Execute(outputPathBuffer, method)
+				if err != nil {
+					return nil, err
+				}
+
+				outputPath := outputPathBuffer.String()
+				files = append(files, &plugin.CodeGeneratorResponse_File{
+					Name:    &outputPath,
+					Content: proto.String(b.String()),
+				})
+			}
+		}
 	case "file":
 		b := bytes.NewBuffer([]byte{})
 		err := g.fileTemplate.Execute(b, fileDescriptor)
@@ -174,7 +195,7 @@ func filterFirstTimeOutputFiles(files []*plugin.CodeGeneratorResponse_File) []*p
 		// パスが存在するかチェック
 		_, err := os.Stat(file.GetName())
 		if !os.IsNotExist(err) {
-			log.Printf("Skip generate %s. Bacause overwite option is false.", file.GetName())
+			log.Printf("Skip generate %s. Bacause overwrite option is false.", file.GetName())
 			continue
 		}
 

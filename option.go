@@ -32,7 +32,7 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 		return nil, err
 	}
 	allowMerge := parseOptionalOption(protoOption, "allow_merge")
-	overwite := parseOptionalOption(protoOption, "overwite")
+	overwrite := parseOptionalOption(protoOption, "overwrite")
 
 	return &ProtoOption{
 		TemplatePath: templatePath,
@@ -40,7 +40,7 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 		OutputPath:   outputDirectory,
 		GenerateType: generateType,
 		AllowMerge:   allowMerge == "true",
-		Overwrite:    overwite != "false",
+		Overwrite:    overwrite != "false",
 	}, nil
 }
 
