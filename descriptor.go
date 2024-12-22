@@ -71,6 +71,7 @@ type ServiceDescriptor struct {
 
 type ServiceMethodDescriptor struct {
 	MethodName    string
+	ServiceName   string
 	InputMessage  *MessageDescriptor
 	OutputMessage *MessageDescriptor
 	Dependencies  []MessageDescriptor
@@ -171,7 +172,7 @@ func (g *FileDescriptorGenerator) generateServiceDescriptor(services []*descript
 	var types []ServiceDescriptor
 
 	for _, service := range services {
-		methods := g.generateServiceMethodDescriptors(service.Method, messages)
+		methods := g.generateServiceMethodDescriptors(service, messages)
 		newService := ServiceDescriptor{
 			ServiceName: strings.TrimSuffix(service.GetName(), "Service"),
 			Methods:     methods,
@@ -183,11 +184,12 @@ func (g *FileDescriptorGenerator) generateServiceDescriptor(services []*descript
 	return types
 }
 
-func (g *FileDescriptorGenerator) generateServiceMethodDescriptors(methods []*descriptor.MethodDescriptorProto, messages MessageDescriptorList) []ServiceMethodDescriptor {
+func (g *FileDescriptorGenerator) generateServiceMethodDescriptors(service *descriptor.ServiceDescriptorProto, messages MessageDescriptorList) []ServiceMethodDescriptor {
 	var params []ServiceMethodDescriptor
-	for _, method := range methods {
+	for _, method := range service.Method {
 		param := ServiceMethodDescriptor{
 			MethodName:    method.GetName(),
+			ServiceName:   strings.TrimSuffix(service.GetName(), "Service"),
 			InputMessage:  messages.GetByMessageName(strings.TrimPrefix(method.GetInputType(), ".")),
 			OutputMessage: messages.GetByMessageName(strings.TrimPrefix(method.GetOutputType(), ".")),
 		}
