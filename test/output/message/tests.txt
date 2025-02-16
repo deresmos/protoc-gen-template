@@ -59,3 +59,16 @@ __TestItem
     id: string,
 
 
+
+// Check message children
+
+NestTests
+
+    id: string,
+
+
+__TestItem
+
+    id: string,
+
+

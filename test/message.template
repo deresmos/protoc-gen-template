@@ -21,3 +21,11 @@
     {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
 {{ end }}
 {{ end }}
+
+// Check message children
+{{ range .Children }}
+{{.MessageName}}
+{{ range .Fields }}
+    {{ toLowerCamelCase .FieldName }}: {{ .DataTypeName }},
+{{ end }}
+{{ end }}

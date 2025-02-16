@@ -31,6 +31,7 @@ type MessageDescriptor struct {
 	Fields       MessageFieldDescriptorList
 	Parents      MessageDescriptorList
 	ItemMessages MessageDescriptorList
+	Children     MessageDescriptorList
 }
 
 type MessageDescriptorList []MessageDescriptor
@@ -129,6 +130,10 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 				continue
 			}
 		}
+		newMessageType.ItemMessages = itemMessages
+		newMessageType.Children = nestedTypes
+
+		types = append(types, newMessageType)
 
 		var filteredNestedMessages []MessageDescriptor
 		for _, nestedType := range nestedTypes {
@@ -137,8 +142,6 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 			}
 			filteredNestedMessages = append(filteredNestedMessages, nestedType)
 		}
-		newMessageType.ItemMessages = itemMessages
-		types = append(types, newMessageType)
 		types = append(types, filteredNestedMessages...)
 	}
 
