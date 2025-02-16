@@ -39,76 +39,72 @@ func (g *fileGenerator) run(fileDescriptor *FileDescriptor) ([]*plugin.CodeGener
 	switch g.option.GenerateType {
 	case "message":
 		for _, message := range fileDescriptor.Messages {
-			b := bytes.NewBuffer([]byte{})
-			err := g.fileTemplate.Execute(b, message)
+			responseFile, err := g.generateResponseFile(message)
 			if err != nil {
 				return nil, err
 			}
-			outputPathBuffer := bytes.NewBuffer([]byte{})
-			err = g.outputPathTemplate.Execute(outputPathBuffer, message)
-			if err != nil {
-				return nil, err
-			}
-
-			outputPath := outputPathBuffer.String()
-			files = append(files, &plugin.CodeGeneratorResponse_File{
-				Name:    &outputPath,
-				Content: proto.String(b.String()),
-			})
+			files = append(files, responseFile)
 		}
 	case "service":
 		for _, service := range fileDescriptor.Services {
-			b := bytes.NewBuffer([]byte{})
-			err := g.fileTemplate.Execute(b, service)
+			responseFile, err := g.generateResponseFile(service)
 			if err != nil {
 				return nil, err
 			}
-			outputPathBuffer := bytes.NewBuffer([]byte{})
-			err = g.outputPathTemplate.Execute(outputPathBuffer, service)
-			if err != nil {
-				return nil, err
-			}
-
-			outputPath := outputPathBuffer.String()
-			files = append(files, &plugin.CodeGeneratorResponse_File{
-				Name:    &outputPath,
-				Content: proto.String(b.String()),
-			})
+			files = append(files, responseFile)
 		}
 	case "method":
 		for _, service := range fileDescriptor.Services {
 			for _, method := range service.Methods {
-				b := bytes.NewBuffer([]byte{})
-				err := g.fileTemplate.Execute(b, method)
+				responseFile, err := g.generateResponseFile(method)
 				if err != nil {
 					return nil, err
 				}
-				outputPathBuffer := bytes.NewBuffer([]byte{})
-				err = g.outputPathTemplate.Execute(outputPathBuffer, method)
-				if err != nil {
-					return nil, err
-				}
-
-				outputPath := outputPathBuffer.String()
-				files = append(files, &plugin.CodeGeneratorResponse_File{
-					Name:    &outputPath,
-					Content: proto.String(b.String()),
-				})
+				files = append(files, responseFile)
 			}
 		}
 	case "file":
-		b := bytes.NewBuffer([]byte{})
-		err := g.fileTemplate.Execute(b, fileDescriptor)
+		responseFile, err := g.generateResponseFile(fileDescriptor)
 		if err != nil {
 			return nil, err
 		}
-		outputPath := g.option.OutputPath
-		files = append(files, &plugin.CodeGeneratorResponse_File{
-			Name:    &outputPath,
-			Content: proto.String(b.String()),
-		})
+		files = append(files, responseFile)
 	}
+
+	files = filterResponseFiles(files, func(file *plugin.CodeGeneratorResponse_File) bool {
+		return file.GetName() != ""
+	})
+
 	return files, nil
+}
+
+func filterResponseFiles(files []*plugin.CodeGeneratorResponse_File, filter func(*plugin.CodeGeneratorResponse_File) bool) []*plugin.CodeGeneratorResponse_File {
+	var newFiles []*plugin.CodeGeneratorResponse_File
+	for _, file := range files {
+		if filter(file) {
+			newFiles = append(newFiles, file)
+		}
+	}
+	return newFiles
+}
+
+func (g *fileGenerator) generateResponseFile(data any) (*plugin.CodeGeneratorResponse_File, error) {
+	b := bytes.NewBuffer([]byte{})
+	err := g.fileTemplate.Execute(b, data)
+	if err != nil {
+		return nil, err
+	}
+	outputPathBuffer := bytes.NewBuffer([]byte{})
+	err = g.outputPathTemplate.Execute(outputPathBuffer, data)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath := outputPathBuffer.String()
+	return &plugin.CodeGeneratorResponse_File{
+		Name:    &outputPath,
+		Content: proto.String(b.String()),
+	}, nil
 }
 
 func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse {
