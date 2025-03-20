@@ -51,6 +51,14 @@ func (t TemplateFunc) Contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
 
+func (t TemplateFunc) HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
+}
+
+func (t TemplateFunc) HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
+}
+
 func initFileTemplate(file string) (*template.Template, error) {
 	var err error
 	var buf []byte
@@ -69,6 +77,8 @@ func initFileTemplate(file string) (*template.Template, error) {
 		"toPlural":         templateFunc.ToPlural,
 		"replace":          templateFunc.Replace,
 		"contains":         templateFunc.Contains,
+		"hasPrefix":        templateFunc.HasPrefix,
+		"hasSuffix":        templateFunc.HasSuffix,
 	}).Parse(string(buf))
 	if err != nil {
 		return nil, err
@@ -87,6 +97,8 @@ func initOutputPathTemplate(outputPath string) (*template.Template, error) {
 		"toPlural":         templateFunc.ToPlural,
 		"replace":          strings.Replace,
 		"contains":         templateFunc.Contains,
+		"hasPrefix":        templateFunc.HasPrefix,
+		"hasSuffix":        templateFunc.HasSuffix,
 	}).Parse(outputPath)
 	if err != nil {
 		return nil, err
