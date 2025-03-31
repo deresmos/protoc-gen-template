@@ -27,11 +27,12 @@ func (f *FileDescriptor) Append(fileDescriptor *FileDescriptor) *FileDescriptor 
 }
 
 type MessageDescriptor struct {
-	MessageName  string
-	Fields       MessageFieldDescriptorList
-	Parents      MessageDescriptorList
-	ItemMessages MessageDescriptorList
-	Children     MessageDescriptorList
+	MessageName   string
+	Fields        MessageFieldDescriptorList
+	Parents       MessageDescriptorList
+	ItemMessages  MessageDescriptorList
+	Children      MessageDescriptorList
+	IsItemMessage bool
 }
 
 type MessageDescriptorList []MessageDescriptor
@@ -81,19 +82,46 @@ type ServiceMethodDescriptor struct {
 type FileDescriptorGenerator struct {
 	packageName string
 	dataType    *datatype.DataType
+	option      generatorOption
 }
 
-func NewFileDescriptorGenerator(packageName string, dataType *datatype.DataType) *FileDescriptorGenerator {
+type generatorOption struct {
+	EnableMessageFlatten bool
+}
+
+func NewFileDescriptorGenerator(packageName string, dataType *datatype.DataType, option generatorOption) *FileDescriptorGenerator {
 	return &FileDescriptorGenerator{
 		packageName: packageName,
 		dataType:    dataType,
+		option:      option,
 	}
+}
+
+func messageFlatten(message *MessageDescriptor) []MessageDescriptor {
+	var messages []MessageDescriptor
+	messages = append(messages, *message)
+	for _, child := range message.Children {
+		if child.IsItemMessage {
+			continue
+		}
+		messages = append(messages, messageFlatten(&child)...)
+	}
+	return messages
 }
 
 func (g *FileDescriptorGenerator) Run(f *descriptor.FileDescriptorProto) (*FileDescriptor, error) {
 	types, err := g.generateMessageDescriptor(f.MessageType, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	var newTypes []MessageDescriptor
+	if g.option.EnableMessageFlatten {
+		for _, message := range types {
+			newTypes = append(newTypes, messageFlatten(&message)...)
+		}
+
+		types = newTypes
 	}
 
 	services := g.generateServiceDescriptor(f.Service, MessageDescriptorList(types))
@@ -105,6 +133,10 @@ func (g *FileDescriptorGenerator) Run(f *descriptor.FileDescriptorProto) (*FileD
 	}, nil
 }
 
+func isItemMessage(name string) bool {
+	return strings.HasPrefix(name, "__")
+}
+
 func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*descriptor.DescriptorProto, parents []MessageDescriptor) ([]MessageDescriptor, error) {
 	var types []MessageDescriptor
 
@@ -114,9 +146,10 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 			return nil, err
 		}
 		newMessageType := MessageDescriptor{
-			MessageName: messageType.GetName(),
-			Fields:      fields,
-			Parents:     parents,
+			MessageName:   messageType.GetName(),
+			Fields:        fields,
+			Parents:       parents,
+			IsItemMessage: isItemMessage(messageType.GetName()),
 		}
 		nestedTypes, err := g.generateMessageDescriptor(messageType.NestedType, append(parents, newMessageType))
 		if err != nil {
@@ -125,7 +158,7 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 
 		var itemMessages MessageDescriptorList
 		for _, nestedType := range nestedTypes {
-			if strings.HasPrefix(nestedType.MessageName, "__") {
+			if nestedType.IsItemMessage {
 				itemMessages = append(itemMessages, nestedType)
 				continue
 			}
@@ -134,15 +167,6 @@ func (g *FileDescriptorGenerator) generateMessageDescriptor(messageTypes []*desc
 		newMessageType.Children = nestedTypes
 
 		types = append(types, newMessageType)
-
-		var filteredNestedMessages []MessageDescriptor
-		for _, nestedType := range nestedTypes {
-			if strings.HasPrefix(nestedType.MessageName, "__") {
-				continue
-			}
-			filteredNestedMessages = append(filteredNestedMessages, nestedType)
-		}
-		types = append(types, filteredNestedMessages...)
 	}
 
 	return types, nil

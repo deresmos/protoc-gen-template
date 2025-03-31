@@ -6,12 +6,13 @@ import (
 )
 
 type ProtoOption struct {
-	TemplatePath string
-	Language     string
-	OutputPath   string
-	GenerateType string
-	AllowMerge   bool
-	Overwrite    bool
+	TemplatePath         string
+	Language             string
+	OutputPath           string
+	GenerateType         string
+	AllowMerge           bool
+	Overwrite            bool
+	enableMessageFlatten bool
 }
 
 func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
@@ -33,14 +34,16 @@ func NewProtoOptionFromString(protoOption string) (*ProtoOption, error) {
 	}
 	allowMerge := parseOptionalOption(protoOption, "allow_merge")
 	overwrite := parseOptionalOption(protoOption, "overwrite")
+	enableMessageFlatten := parseOptionalOption(protoOption, "enable_message_flatten")
 
 	return &ProtoOption{
-		TemplatePath: templatePath,
-		Language:     language,
-		OutputPath:   outputDirectory,
-		GenerateType: generateType,
-		AllowMerge:   allowMerge == "true",
-		Overwrite:    overwrite != "false",
+		TemplatePath:         templatePath,
+		Language:             language,
+		OutputPath:           outputDirectory,
+		GenerateType:         generateType,
+		AllowMerge:           allowMerge == "true",            // Default false
+		Overwrite:            overwrite != "false",            // Default true
+		enableMessageFlatten: enableMessageFlatten != "false", // Default true
 	}, nil
 }
 

@@ -117,7 +117,9 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
 		panic(err)
 	}
 
-	fileDescriptorGenerator := NewFileDescriptorGenerator(req.GetParameter(), dataType)
+	fileDescriptorGenerator := NewFileDescriptorGenerator(req.GetParameter(), dataType, generatorOption{
+		EnableMessageFlatten: protoOption.enableMessageFlatten,
+	})
 	fileTmpl, err := initFileTemplate(protoOption.TemplatePath)
 	if err != nil {
 		panic(err)
