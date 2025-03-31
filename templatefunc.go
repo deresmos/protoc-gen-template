@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 )
@@ -75,11 +76,7 @@ func initFileTemplate(file string) (*template.Template, error) {
 		"toSnakeCase":      templateFunc.ToSnakeCase,
 		"toSingular":       templateFunc.ToSingular,
 		"toPlural":         templateFunc.ToPlural,
-		"replace":          templateFunc.Replace,
-		"contains":         templateFunc.Contains,
-		"hasPrefix":        templateFunc.HasPrefix,
-		"hasSuffix":        templateFunc.HasSuffix,
-	}).Parse(string(buf))
+	}).Funcs(sprig.FuncMap()).Parse(string(buf))
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +96,7 @@ func initOutputPathTemplate(outputPath string) (*template.Template, error) {
 		"contains":         templateFunc.Contains,
 		"hasPrefix":        templateFunc.HasPrefix,
 		"hasSuffix":        templateFunc.HasSuffix,
-	}).Parse(outputPath)
+	}).Funcs(sprig.FuncMap()).Parse(outputPath)
 	if err != nil {
 		return nil, err
 	}
